@@ -20,9 +20,10 @@ sheets = [i.title for i in sheet.worksheets()[12:]]
 
 dataBase = sqlite3.connect('nba_ids.db')
 base = dataBase.cursor()
-base.execute('''CREATE TABLE IF NOT EXISTS homeAway
-             (playerName TEXT, twoPointHome TEXT, twoPointAway TEXT, threePointHome TEXT, 
-             threePointAway TEXT, FTHome TEXT, FTAway TEXT, gamesPlayedHome TEXT, gamesPlayedAway TEXT)''')
+base.execute('''CREATE TABLE IF NOT EXISTS homeAwayPlayer
+             (playerName TEXT, twoPointHome REAL, twoPointAway REAL, threePointHome REAL, 
+             threePointAway REAL, FTHome REAL, FTAway REAL, gamesPlayedHome INTEGER, gamesPlayedAway INTEGER,
+             twPAA INTEGER, twPAH INTEGER, thPAA INTEGER, thPAH INTEGER, FTAA INTEGER, FTAH INTEGER)''')
 dataBase.commit()
 
 for sheetName in sheets:
@@ -63,11 +64,11 @@ for sheetName in sheets:
     AwayDf = df[df['Location'] == '@']
     HomeDf = df[df['Location'] != '@']
     
-    base.execute("SELECT * FROM homeAway WHERE playerName = ?", (sheetName,))
+    base.execute("SELECT * FROM homeAwayPlayer WHERE playerName = ?", (sheetName,))
     result = base.fetchone()
     
     if result is None:
-        base.execute("INSERT INTO homeAway (playerName, twoPointHome, twoPointAway, threePointHome, threePointAway, FTHome, FTAway, gamesPlayedHome, gamesPlayedAway) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        base.execute("INSERT INTO homeAwayPlayer (playerName, twoPointHome, twoPointAway, threePointHome, threePointAway, FTHome, FTAway, gamesPlayedHome, gamesPlayedAway, twPAA, twPAH , thPAA, thPAH, FTAA, FTAH) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                      (sheetName, 
                       HomeDf["2P"].sum()/HomeDf["2PA"].sum(), 
                       AwayDf["2P"].sum()/AwayDf["2PA"].sum(), 
@@ -76,7 +77,13 @@ for sheetName in sheets:
                       HomeDf["FT"].sum()/HomeDf["FTA"].sum(), 
                       AwayDf["FT"].sum()/AwayDf["FTA"].sum(), 
                       len(HomeDf.index), 
-                      len(AwayDf.index)))
+                      len(AwayDf.index),
+                      int(HomeDf["2PA"].sum()),
+                      int(AwayDf["2PA"].sum()),
+                      int(HomeDf["3PA"].sum()),
+                      int(AwayDf["3PA"].sum()),
+                      int(HomeDf["FTA"].sum()),
+                      int(AwayDf["FTA"].sum())))
         dataBase.commit()
 
     print(sheetName)
