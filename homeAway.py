@@ -25,7 +25,7 @@ base.execute('''CREATE TABLE IF NOT EXISTS homeAway
              threePointAway TEXT, FTHome TEXT, FTAway TEXT, gamesPlayedHome TEXT, gamesPlayedAway TEXT)''')
 dataBase.commit()
 
-for sheetName in sheets[sheets.index("Cade_Cunningham")+1:]:
+for sheetName in sheets:
     time.sleep(2)
     sh = sheet.worksheet(sheetName)
     
@@ -69,12 +69,12 @@ for sheetName in sheets[sheets.index("Cade_Cunningham")+1:]:
     if result is None:
         base.execute("INSERT INTO homeAway (playerName, twoPointHome, twoPointAway, threePointHome, threePointAway, FTHome, FTAway, gamesPlayedHome, gamesPlayedAway) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                      (sheetName, 
-                      HomeDf["2P%"].mean(), 
-                      AwayDf["2P%"].mean(), 
-                      HomeDf["3P%"].mean(), 
-                      AwayDf["3P%"].mean(), 
-                      HomeDf["FT%"].mean(), 
-                      AwayDf["FT%"].mean(), 
+                      HomeDf["2P"].sum()/HomeDf["2PA"].sum(), 
+                      AwayDf["2P"].sum()/AwayDf["2PA"].sum(), 
+                      HomeDf["3P"].sum()/HomeDf["3PA"].sum(), 
+                      AwayDf["3P"].sum()/AwayDf["3PA"].sum(), 
+                      HomeDf["FT"].sum()/HomeDf["FTA"].sum(), 
+                      AwayDf["FT"].sum()/AwayDf["FTA"].sum(), 
                       len(HomeDf.index), 
                       len(AwayDf.index)))
         dataBase.commit()
