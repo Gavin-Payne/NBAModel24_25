@@ -25,13 +25,60 @@ base.execute('''CREATE TABLE IF NOT EXISTS homeAway
              threePointAway TEXT, FTHome TEXT, FTAway TEXT, gamesPlayedHome TEXT, gamesPlayedAway TEXT)''')
 dataBase.commit()
 
-for sheetName in sheets[:2]:
+for sheetName in sheets[sheets.index("Cade_Cunningham")+1:]:
+    time.sleep(2)
     sh = sheet.worksheet(sheetName)
-    df = pd.DataFrame(sh.get("I3:AE120"))
+    
+    data = sh.get("I3:AE120")
+    
+    if not data:
+        print(f"No data found for sheet: {sheetName}")
+        continue
+    
+    df = pd.DataFrame(data)
+    
+    if df.empty:
+        print(f"Empty DataFrame for sheet: {sheetName}")
+        continue
+    
     df.columns = ['Location', 'Opp', 'Result', 'GS', 'MP', 'FG', 'FGA', 'FG%', 
                     '3P', '3PA', '3P%', 'FT', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 
                     'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS']
-    print(df)
     
+    df.replace({'0000000': None, '': None, 'N/A': None}, inplace=True)
+    
+    df["FG"] = pd.to_numeric(df["FG"])
+    df["3P"] = pd.to_numeric(df["3P"])
+    df["FGA"] = pd.to_numeric(df["FGA"])
+    df["3PA"] = pd.to_numeric(df["3PA"])
+    df["FT"] = pd.to_numeric(df["FT"])
+    df["FTA"] = pd.to_numeric(df["FTA"])
+    df["3P%"] = pd.to_numeric(df["3P%"])
+    df["FT%"] = pd.to_numeric(df["FT%"])
+    
+    df["2P"] = df["FG"] - df["3P"]
+    df["2PA"] = df["FGA"] - df["3PA"]
+    df["2P%"] = df["2P"] / df["2PA"]
+    
+    AwayDf = df[df['Location'] == '@']
+    HomeDf = df[df['Location'] != '@']
+    
+    base.execute("SELECT * FROM homeAway WHERE playerName = ?", (sheetName,))
+    result = base.fetchone()
+    
+    if result is None:
+        base.execute("INSERT INTO homeAway (playerName, twoPointHome, twoPointAway, threePointHome, threePointAway, FTHome, FTAway, gamesPlayedHome, gamesPlayedAway) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     (sheetName, 
+                      HomeDf["2P%"].mean(), 
+                      AwayDf["2P%"].mean(), 
+                      HomeDf["3P%"].mean(), 
+                      AwayDf["3P%"].mean(), 
+                      HomeDf["FT%"].mean(), 
+                      AwayDf["FT%"].mean(), 
+                      len(HomeDf.index), 
+                      len(AwayDf.index)))
+        dataBase.commit()
+
+    print(sheetName)
     
 
