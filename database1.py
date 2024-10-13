@@ -33,22 +33,23 @@ dataBase.commit()
 
 #Open link and wait for it to load
 driver = webdriver.Chrome()
-url = "https://www.pbpstats.com/on-off/nba/team?Season=2023-24&SeasonType=Regular%2BSeason&TeamId=1610612762&PlayerId=201599"
+url = "https://www.pbpstats.com/on-off/nba/team?Season=2023-24&SeasonType=Regular%2BSeason&TeamId=1610612737&PlayerId=201988"
 driver.get(url)
 wait = WebDriverWait(driver, 10)
 
 for i in range(30):
-    dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, '(//div[@class="multiselect"])[3]')))
+    if i > 0:
+        dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, '(//div[@class="multiselect"])[3]')))
 
-    driver.execute_script("arguments[0].click();", dropdown)
-    time.sleep(2)
+        driver.execute_script("arguments[0].click();", dropdown)
+        time.sleep(2)
 
-    teams = wait.until(EC.presence_of_all_elements_located((By.XPATH, '(//div[@class="multiselect"])[3]//ul[@class="multiselect__content"]//li[@class="multiselect__element"]//span[@class="multiselect__option"]//span')))
-    team = teams[i]
+        teams = wait.until(EC.presence_of_all_elements_located((By.XPATH, '(//div[@class="multiselect"])[3]//ul[@class="multiselect__content"]//li[@class="multiselect__element"]//span[@class="multiselect__option"]//span')))
+        team = teams[i]
 
-    driver.execute_script("arguments[0].scrollIntoView();", team)
-    driver.execute_script("arguments[0].click();", team)
-    time.sleep(2)
+        driver.execute_script("arguments[0].scrollIntoView();", team)
+        driver.execute_script("arguments[0].click();", team)
+        time.sleep(2)
 
     currentURL = driver.current_url
     teamID = currentURL.split('TeamId=')[1].split('&')[0]
@@ -73,7 +74,7 @@ for i in range(30):
         driver.execute_script("arguments[0].click();", button)
         time.sleep(3)
 
-        currentURL = driver.currentURL
+        currentURL = driver.current_url
         playerID = currentURL.split('PlayerId=')[1]
         time.sleep(1)
 

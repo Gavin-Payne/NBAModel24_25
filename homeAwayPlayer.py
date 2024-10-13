@@ -21,7 +21,7 @@ sheets = [i.title for i in sheet.worksheets()[12:]]
 dataBase = sqlite3.connect('nba_ids.db')
 base = dataBase.cursor()
 base.execute('''CREATE TABLE IF NOT EXISTS homeAwayPlayer
-             (playerName TEXT, twoPointHome REAL, twoPointAway REAL, threePointHome REAL, 
+             (playerName TEXT, minutesHome REAL, minutesAway REAL, twoPointHome REAL, twoPointAway REAL, threePointHome REAL, 
              threePointAway REAL, FTHome REAL, FTAway REAL, gamesPlayedHome INTEGER, gamesPlayedAway INTEGER,
              twPAA INTEGER, twPAH INTEGER, thPAA INTEGER, thPAH INTEGER, FTAA INTEGER, FTAH INTEGER)''')
 dataBase.commit()
@@ -48,6 +48,9 @@ for sheetName in sheets:
     
     df.replace({'0000000': None, '': None, 'N/A': None}, inplace=True)
     
+    df['minutes'] = df['MP'].apply(lambda x: int(x.split(':')[0]) + int(x.split(':')[1]) / 60)
+
+    
     df["FG"] = pd.to_numeric(df["FG"])
     df["3P"] = pd.to_numeric(df["3P"])
     df["FGA"] = pd.to_numeric(df["FGA"])
@@ -68,8 +71,10 @@ for sheetName in sheets:
     result = base.fetchone()
     
     if result is None:
-        base.execute("INSERT INTO homeAwayPlayer (playerName, twoPointHome, twoPointAway, threePointHome, threePointAway, FTHome, FTAway, gamesPlayedHome, gamesPlayedAway, twPAA, twPAH , thPAA, thPAH, FTAA, FTAH) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                     (sheetName, 
+        base.execute("INSERT INTO homeAwayPlayer (playerName, minutesHome, minutesAway, twoPointHome, twoPointAway, threePointHome, threePointAway, FTHome, FTAway, gamesPlayedHome, gamesPlayedAway, twPAA, twPAH , thPAA, thPAH, FTAA, FTAH) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     (sheetName,
+                      HomeDf["minutes"].sum()/len(HomeDf.index),
+                      AwayDf["minutes"].sum()/len(AwayDf.index),
                       HomeDf["2P"].sum()/HomeDf["2PA"].sum(), 
                       AwayDf["2P"].sum()/AwayDf["2PA"].sum(), 
                       HomeDf["3P"].sum()/HomeDf["3PA"].sum(), 

@@ -29,6 +29,8 @@ def fetchData(dbName, query):
 db = 'nba_ids.db'
 query = 'SELECT * FROM homeAwayPlayer;'
 sheetInsert = "homeAwayPlayer"
+
+
 sh = sheet.worksheet(sheetInsert)
 data = fetchData(db, query)
 sh.update("B2", data)

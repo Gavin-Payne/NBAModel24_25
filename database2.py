@@ -18,8 +18,8 @@ SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
 sh = sheet.worksheet("perGame")
 
-ids = sh.get("AF499:AF737")
-names = sh.get("C499:C737")
+ids = sh.get("AF3:AF737")
+names = sh.get("C3:C737")
 worksheets = sheet.worksheets()
 worksheets = [ws.title for ws in worksheets]
 used = ["None"]
@@ -74,9 +74,9 @@ def scrape_game_log(playerId, attempt=1):
 def updateSheet(header, data, sheetName):
     sh = sheet.worksheet(sheetName)
     df = pd.DataFrame(data, columns=header)
+    df = df.iloc[:, 4:-2]
     df = df.apply(pd.to_numeric)
     df = df[pd.to_numeric(df.iloc[:, 1]).notna()]
-    df = df.iloc[:, 4:-2]
     df.fillna(0, inplace=True)
     
     dataOutput = [df.columns.tolist()] + df.values.tolist()
