@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import json
 import random
+import time
 
 load_dotenv()
 googleJSON = os.getenv('GOOGLE_CLOUD_SERVICE_ACCOUNT')
@@ -18,11 +19,12 @@ SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
 sh = sheet.worksheet("perGame")
 
-ids = sh.get("AF3:AF737")
-names = sh.get("C3:C737")
+ids = sh.get("AF70:AF737")
+names = sh.get("C70:C737")
 worksheets = sheet.worksheets()
 worksheets = [ws.title for ws in worksheets]
 used = ["None"]
+
 
 agents = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36',
@@ -42,6 +44,7 @@ agents = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0',
     'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0',
 ] # Chat GPT generated agents OpenAI. (2024). ChatGPT [Large language model]. https://chatgpt.com
+
 
 def scrape_game_log(playerId, attempt=1):
     url = f"https://www.basketball-reference.com/players/s/{playerId}/gamelog/2024"
@@ -72,15 +75,22 @@ def scrape_game_log(playerId, attempt=1):
     return headers, data
 
 def updateSheet(header, data, sheetName):
+    time.sleep(3)
     sh = sheet.worksheet(sheetName)
     df = pd.DataFrame(data, columns=header)
-    df = df.iloc[:, 4:-2]
+    df1 = df.iloc[:, 2:10]
+    df1 = df1.drop(df1.columns[[1, 5, 6]], axis=1)
+    df = df.iloc[:, 10:-2]
     df = df.apply(pd.to_numeric)
     df = df[pd.to_numeric(df.iloc[:, 1]).notna()]
+    df = pd.concat([df1, df], axis=1).reindex(df1.index)
     df.fillna(0, inplace=True)
     
+    df = df[df[df.columns[3]] != 0]
+    
     dataOutput = [df.columns.tolist()] + df.values.tolist()
-    sh.update(range_name="H2", values=dataOutput)
+    sh.batch_clear(["G2:AE120"])
+    sh.update(range_name="G2", values=dataOutput)
 
 for i in range(len(ids)):
     id = ids[i][0]
@@ -91,3 +101,4 @@ for i in range(len(ids)):
             header, data = scrape_game_log(id)
             if header and data:
                 updateSheet(header, data, name)
+                print(name)
