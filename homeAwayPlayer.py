@@ -15,8 +15,9 @@ creds = Credentials.from_service_account_info(googleAccount, scopes=scopes)
 client = gspread.authorize(creds)
 SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
-sheets = [i.title for i in sheet.worksheets()[12:]]
+sheets = [i.title for i in sheet.worksheets()[584:]]
 
+counter = 0
 
 dataBase = sqlite3.connect('nba_ids.db')
 base = dataBase.cursor()
@@ -27,10 +28,11 @@ base.execute('''CREATE TABLE IF NOT EXISTS homeAwayPlayer
 dataBase.commit()
 
 for sheetName in sheets:
+    counter += 1
     time.sleep(2)
     sh = sheet.worksheet(sheetName)
     
-    data = sh.get("I3:AE120")
+    data = sh.get("I3:AC120")
     
     if not data:
         print(f"No data found for sheet: {sheetName}")
@@ -42,7 +44,7 @@ for sheetName in sheets:
         print(f"Empty DataFrame for sheet: {sheetName}")
         continue
     
-    df.columns = ['Location', 'Opp', 'Result', 'GS', 'MP', 'FG', 'FGA', 'FG%', 
+    df.columns = ['Location', 'Opp', 'MP', 'FG', 'FGA', 'FG%', 
                     '3P', '3PA', '3P%', 'FT', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 
                     'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS']
     
@@ -90,7 +92,7 @@ for sheetName in sheets:
                       int(HomeDf["FTA"].sum()),
                       int(AwayDf["FTA"].sum())))
         dataBase.commit()
-
+    print(counter)
     print(sheetName)
     
 

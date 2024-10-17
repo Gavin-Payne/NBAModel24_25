@@ -19,8 +19,8 @@ SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
 sh = sheet.worksheet("perGame")
 
-ids = sh.get("AF70:AF737")
-names = sh.get("C70:C737")
+ids = sh.get("AF55:AF737")
+names = sh.get("C55:C737")
 worksheets = sheet.worksheets()
 worksheets = [ws.title for ws in worksheets]
 used = ["None"]
@@ -79,6 +79,7 @@ def updateSheet(header, data, sheetName):
     sh = sheet.worksheet(sheetName)
     df = pd.DataFrame(data, columns=header)
     df1 = df.iloc[:, 2:10]
+    df1.columns = ["Date", "Age", "Tm", "Loc", "Opp", "Res", "GS", "MP"]
     df1 = df1.drop(df1.columns[[1, 5, 6]], axis=1)
     df = df.iloc[:, 10:-2]
     df = df.apply(pd.to_numeric)
@@ -86,7 +87,7 @@ def updateSheet(header, data, sheetName):
     df = pd.concat([df1, df], axis=1).reindex(df1.index)
     df.fillna(0, inplace=True)
     
-    df = df[df[df.columns[3]] != 0]
+    df = df[df[df.columns[4]] != 0]
     
     dataOutput = [df.columns.tolist()] + df.values.tolist()
     sh.batch_clear(["G2:AE120"])

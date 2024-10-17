@@ -45,13 +45,13 @@ for sheetName in sheets:
         print(f"Empty DataFrame for sheet: {sheetName}")
         continue
     
-    df.columns = ['Location', 'Opp', 'Result', 'GS', 'MP', '2P', '2PA', '2P%', 
+    df.columns = ['Location', 'Opp', 'MP', '2P', '2PA', '2P%', 
                     '3P', '3PA', '3P%', 'FT', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 
                     'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS']
     
     df.replace({'0000000': None, '': None, 'N/A': None}, inplace=True)
     
-    for col in df.columns[5:]:
+    for col in df.columns[3:]:
         
         df[col] = pd.to_numeric(df[col])
     
@@ -65,13 +65,13 @@ for sheetName in sheets:
         hm[f'home{AwayDf.iloc[i,1]}'] = hm.get(f'home{AwayDf.iloc[i,1]}', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         data = hm[f'home{AwayDf.iloc[i,1]}']
         for j in range(len(data)):
-            data[j] += AwayDf.iloc[i, 5 + j]
+            data[j] += AwayDf.iloc[i, 3 + j]
             
     for i in range(HomeDf.shape[0]):
         hm[f'away{HomeDf.iloc[i,1]}'] = hm.get(f'away{HomeDf.iloc[i,1]}', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         data = hm[f'away{HomeDf.iloc[i,1]}']
         for j in range(len(data)):
-            data[j] += HomeDf.iloc[i, 5 + j]
+            data[j] += HomeDf.iloc[i, 3 + j]
             
 teamData = []            
 for team, s in hm.items():
