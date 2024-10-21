@@ -24,10 +24,12 @@ client = gspread.authorize(creds)
 SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
 
+
 df = pd.DataFrame(columns=["Name", 'Over', 'Over Odds', 'Under', 'Under Odds'])
 
-#Open link and wait for it to load
 driver = webdriver.Chrome()
+
+#point, rebounds, assists, ensure urls match shs
 urls = ["https://sportsbook.draftkings.com/leagues/basketball/nba?category=player-points&subcategory=points-o%2Fu",
         "https://sportsbook.draftkings.com/leagues/basketball/nba?category=player-rebounds&subcategory=rebounds-o%2Fu",
         "https://sportsbook.draftkings.com/leagues/basketball/nba?category=player-assists&subcategory=assists-o%2Fu"]
@@ -41,7 +43,6 @@ for i in range(len(urls)):
     
     wait = WebDriverWait(driver, 10)
 
-    # Wait for page to load fully
     time.sleep(5)
 
     rows = driver.find_elements(By.XPATH, "//tbody[@class='sportsbook-table__body']/tr")
@@ -49,17 +50,17 @@ for i in range(len(urls)):
     for row in rows:
         try:
             player = row.find_element(By.XPATH, ".//span[@class='sportsbook-row-name']").text
-            over_line = row.find_element(By.XPATH, ".//td[1]//span[@class='sportsbook-outcome-cell__line']").text
-            over_odds = row.find_element(By.XPATH, ".//td[1]//span[contains(@class, 'sportsbook-odds')]").text
-            under_line = row.find_element(By.XPATH, ".//td[2]//span[@class='sportsbook-outcome-cell__line']").text
-            under_odds = row.find_element(By.XPATH, ".//td[2]//span[contains(@class, 'sportsbook-odds')]").text
+            overLine = row.find_element(By.XPATH, ".//td[1]//span[@class='sportsbook-outcome-cell__line']").text
+            overOdds = row.find_element(By.XPATH, ".//td[1]//span[contains(@class, 'sportsbook-odds')]").text
+            underLine = row.find_element(By.XPATH, ".//td[2]//span[@class='sportsbook-outcome-cell__line']").text
+            underOdds = row.find_element(By.XPATH, ".//td[2]//span[contains(@class, 'sportsbook-odds')]").text
             
-            Name = '_'.join(re.findall(r"[\w']+", player))
+            name = '_'.join(re.findall(r"[\w']+", player))
             
-            new_row = pd.Series({"Name": Name, 'Over': over_line, 
-                    'Over Odds': over_odds, 'Under': under_line, 'Under Odds': under_odds})
+            add = pd.Series({"Name": name, 'Over': overLine, 
+                    'Over Odds': overOdds, 'Under': underLine, 'Under Odds': underOdds})
             
-            df = pd.concat([df, new_row.to_frame().T], ignore_index=True)
+            df = pd.concat([df, add.to_frame().T], ignore_index=True)
 
         except Exception as e:
             print(f"Error extracting data for row: {e}")
@@ -68,7 +69,6 @@ for i in range(len(urls)):
     sh.clear()
     sh.batch_update([{
                         'range': 'B2',
-                        'values': insertTable # team abbrev.
+                        'values': insertTable
                         }])
-# Close the browser
 driver.quit()

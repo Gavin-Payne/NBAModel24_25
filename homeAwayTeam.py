@@ -72,6 +72,7 @@ for sheetName in sheets:
         data = hm[f'away{HomeDf.iloc[i,1]}']
         for j in range(len(data)):
             data[j] += HomeDf.iloc[i, 3 + j]
+    print(sheetName)
             
 teamData = []            
 for team, s in hm.items():
