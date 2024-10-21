@@ -15,7 +15,7 @@ creds = Credentials.from_service_account_info(googleAccount, scopes=scopes)
 client = gspread.authorize(creds)
 SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
-sheets = [i.title for i in sheet.worksheets()[584:]]
+sheets = [i.title for i in sheet.worksheets()[15:]]
 
 counter = 0
 
@@ -24,7 +24,8 @@ base = dataBase.cursor()
 base.execute('''CREATE TABLE IF NOT EXISTS homeAwayPlayer
              (playerName TEXT, minutesHome REAL, minutesAway REAL, twoPointHome REAL, twoPointAway REAL, threePointHome REAL, 
              threePointAway REAL, FTHome REAL, FTAway REAL, gamesPlayedHome INTEGER, gamesPlayedAway INTEGER,
-             twPAA INTEGER, twPAH INTEGER, thPAA INTEGER, thPAH INTEGER, FTAA INTEGER, FTAH INTEGER)''')
+             twPAA INTEGER, twPAH INTEGER, thPAA INTEGER, thPAH INTEGER, FTAA INTEGER, FTAH INTEGER, TRBH INTEGER, TRBA INTEGER,
+             ASTH INTEGER, ASTA INTEGER)''')
 dataBase.commit()
 
 for sheetName in sheets:
@@ -66,6 +67,9 @@ for sheetName in sheets:
     df["2PA"] = df["FGA"] - df["3PA"]
     df["2P%"] = df["2P"] / df["2PA"]
     
+    df['TRB'] = pd.to_numeric(df['TRB'])
+    df['AST'] = pd.to_numeric(df['AST'])
+    
     AwayDf = df[df['Location'] == '@']
     HomeDf = df[df['Location'] != '@']
     
@@ -73,7 +77,7 @@ for sheetName in sheets:
     result = base.fetchone()
     
     if result is None:
-        base.execute("INSERT INTO homeAwayPlayer (playerName, minutesHome, minutesAway, twoPointHome, twoPointAway, threePointHome, threePointAway, FTHome, FTAway, gamesPlayedHome, gamesPlayedAway, twPAA, twPAH , thPAA, thPAH, FTAA, FTAH) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        base.execute("INSERT INTO homeAwayPlayer (playerName, minutesHome, minutesAway, twoPointHome, twoPointAway, threePointHome, threePointAway, FTHome, FTAway, gamesPlayedHome, gamesPlayedAway, twPAA, twPAH , thPAA, thPAH, FTAA, FTAH, TRBH, TRBA, ASTH, ASTA) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                      (sheetName,
                       HomeDf["minutes"].sum()/len(HomeDf.index),
                       AwayDf["minutes"].sum()/len(AwayDf.index),
@@ -90,7 +94,11 @@ for sheetName in sheets:
                       int(HomeDf["3PA"].sum()),
                       int(AwayDf["3PA"].sum()),
                       int(HomeDf["FTA"].sum()),
-                      int(AwayDf["FTA"].sum())))
+                      int(AwayDf["FTA"].sum()),
+                      int(HomeDf['TRB'].sum()),
+                      int(AwayDf['TRB'].sum()),
+                      int(HomeDf['AST'].sum()),
+                      int(AwayDf['AST'].sum())))
         dataBase.commit()
     print(counter)
     print(sheetName)
