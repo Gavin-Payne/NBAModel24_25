@@ -62,6 +62,8 @@ for i, section in enumerate(games):
 df = pd.DataFrame(lineups, columns=['Team', 'PG', 'SG', 'SF', 'PF', 'C'])
 
 values = [df.columns.values.tolist()] + df.values.tolist()
+
+sh.batch_clear(["B2:F31"])
 sh.update("A1", values)
 
 print(df)
