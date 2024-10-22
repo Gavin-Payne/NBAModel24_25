@@ -24,12 +24,10 @@ def monteCarlo(sheetName):
     df = pd.DataFrame(sh.get("B5:M154"))
     df.columns = ['Name', 'Opp', "H/A", "Minutes", '2PA', '2P%', '3PA', '3P%', 'FTA', 'FT%', "Mean", "Line"]
     
-    # Convert columns to numeric, invalid parsing will be set as NaN
     df[['2PA', '2P%', '3PA', '3P%', 'FTA', 'FT%', 'Mean', 'Line']] = df[['2PA', '2P%', '3PA', '3P%', 'FTA', 'FT%', 'Mean', 'Line']].apply(pd.to_numeric, errors='coerce')
     
     results = []
 
-    # Iterate through rows
     for index, row in df.iterrows():
         if row.isna().any():
             if row['Name']:
@@ -42,7 +40,6 @@ def monteCarlo(sheetName):
                             })
             continue
         
-        # Convert relevant values to integers or floats
         twoPA, dectwoPA = row['2PA'] // 1, row['2PA']  - row['2PA'] // 1
         twoPercent = float(row['2P%'])
         threePA, decthreePA = row['3PA'] // 1, row['3PA'] - row['3PA'] // 1
@@ -52,25 +49,24 @@ def monteCarlo(sheetName):
 
         simPoints = []
         
-        # Perform 10,000 simulations for each player
+        # 10k simmies for each player
         for _ in range(10000):
-            two_p_makes = np.random.binomial(n=twoPA, p=twoPercent) + (dectwoPA if random.randint(0, 10000) <= twoPercent * 10000 else 0)
-            three_p_makes = np.random.binomial(n=threePA, p=threePercent) + (decthreePA if random.randint(0, 10000) <= threePercent * 10000 else 0)
-            ft_makes = np.random.binomial(n=fta, p=ftPercent) + (decFTA if random.randint(0, 10000) <= ftPercent * 10000 else 0)
-            # Calculate total points in this simulation
-            total_points = (2 * two_p_makes) + (3 * three_p_makes) + (1 * ft_makes)
-            simPoints.append(total_points)
+            tPointMakes = np.random.binomial(n=twoPA, p=twoPercent) + (dectwoPA if random.randint(0, 10000) <= twoPercent * 10000 else 0)
+            thPointMakes = np.random.binomial(n=threePA, p=threePercent) + (decthreePA if random.randint(0, 10000) <= threePercent * 10000 else 0)
+            ftMakes = np.random.binomial(n=fta, p=ftPercent) + (decFTA if random.randint(0, 10000) <= ftPercent * 10000 else 0)
+            points = (2 * tPointMakes) + (3 * thPointMakes) + (1 * ftMakes)
+            simPoints.append(points)
 
         line = row['Line']
-        above_line_count = sum(np.array(simPoints) > line)
-        above_line_prob = above_line_count / 10000
+        countAbove = sum(np.array(simPoints) > line)
+        percentAbove = countAbove / 10000
         
         results.append({
             'Name': row['Name'],
             'Mean Simulated Points': np.mean(simPoints),
             'Line': row['Line'],  
-            '%Above' : above_line_prob,
-            "%Below" : 1- above_line_prob
+            '%Above' : percentAbove,
+            "%Below" : 1- percentAbove
         })
     
     simulation_results = pd.DataFrame(results)
