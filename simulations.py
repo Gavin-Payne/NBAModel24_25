@@ -9,6 +9,8 @@ import json
 import random
 import sqlite3
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as path_effects
 
 load_dotenv()
 googleJSON = os.getenv('GOOGLE_CLOUD_SERVICE_ACCOUNT')
@@ -18,6 +20,12 @@ creds = Credentials.from_service_account_info(googleAccount, scopes=scopes)
 client = gspread.authorize(creds)
 SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
+
+twitterKey = os.getenv("TWITTER_KEY")
+twitterSecretKey = os.getenv("TWITTER_SECRET_KEY")
+twitterAccessToken = os.getenv("TWITTER_ACCESS_TOKEN")
+twitterSecretAccessToken = os.getenv("TWITTER_SECRET_ACCESS_TOKEN")
+twitterBearerToken = os.getenv("TWITTER_BEARER_TOKEN")
 
 def monteCarlo(sheetName):
     sh = sheet.worksheet(sheetName)
@@ -69,8 +77,35 @@ def monteCarlo(sheetName):
             "%Below" : 1- percentAbove
         })
     
-    simulation_results = pd.DataFrame(results)
     
+        graphData = []
+        
+        postPlayer = "Jeremy_Sochan"
+        if row["Name"] == postPlayer:
+            graphData = simPoints
+        
+        if graphData:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            n, bins, patches = ax.hist(graphData, bins=30, alpha=0.85, color='#00c0ff', edgecolor='#00eaff', linewidth=1.2)
+            highlight_value = 0
+            for patch, left_side in zip(patches, bins[:-1]):
+                if left_side <= highlight_value < left_side + (bins[1] - bins[0]):
+                    patch.set_facecolor('orange')
+            ax.set_facecolor('#1a1a1a')
+            plt.style.use('dark_background')
+            title = plt.title(f'Simulation Points Distribution for {" ".join(postPlayer.split("_"))}', fontsize=16, color="#F2F0EF", fontweight='bold')
+            title.set_path_effects([path_effects.Stroke(linewidth=3, foreground='black'), path_effects.Normal()])
+            plt.xlabel('Simulated Points', fontsize=14, color='lightgrey')
+            plt.ylabel('Frequency', fontsize=14, color='lightgrey')
+            plt.axvline(x=np.mean(graphData), color='red', linestyle='--', linewidth=3.5, label=f'Mean = {np.mean(graphData):.2f}')
+            plt.axvline(x=row["Line"], color='green', linestyle='--', linewidth=3.5, label=f'Line = {row["Line"]}')
+            plt.tick_params(axis='x', colors='lightgrey')
+            plt.tick_params(axis='y', colors='lightgrey')
+            plt.legend(facecolor='black', edgecolor='lightgrey', fontsize=12)
+            plt.savefig(os.path.join("playerVisuals", f'{postPlayer}_Simulation_Distribution.png'), dpi=300, bbox_inches='tight')
+            
+            
+    simulation_results = pd.DataFrame(results)
     return simulation_results
 
 sheetName = "Calculations"
@@ -79,4 +114,4 @@ simdf = monteCarlo(sheetName)
 insertFrame = simdf[["%Above", '%Below']]
 insertFrame = [insertFrame.columns.values.tolist()] + insertFrame.values.tolist()
 sh.batch_clear(["P4:Q154"])
-sh.update("P4", insertFrame)
+sh.update(range_name="P4", values=insertFrame)

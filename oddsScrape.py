@@ -56,6 +56,10 @@ for i in range(len(urls)):
             underOdds = row.find_element(By.XPATH, ".//td[2]//span[contains(@class, 'sportsbook-odds')]").text
             
             name = '_'.join(re.findall(r"[\w']+", player))
+            name = name.split("_")
+            if name[-1] == "Jr":
+                name = name[:-1]
+            name = "_".join(name)
             
             add = pd.Series({"Name": name, 'Over': overLine, 
                     'Over Odds': overOdds, 'Under': underLine, 'Under Odds': underOdds})

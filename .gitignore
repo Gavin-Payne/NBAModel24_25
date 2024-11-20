@@ -2,3 +2,6 @@
 nba_ids.db
 nba_ids-My_Laptop-2.db
 nba_ids-My_Laptop.db
+output.csv
+NBAenv
+__pycache__

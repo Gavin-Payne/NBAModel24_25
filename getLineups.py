@@ -6,6 +6,19 @@ from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 import os
 import json
+import unicodedata
+import re
+
+
+def regularize_name(name):
+    name = unicodedata.normalize('NFD', name).encode('ascii', 'ignore').decode('utf-8')
+    name = re.sub(r"[’'`]", "", name)
+    name = re.sub(r"[-]", " ", name)
+    name = re.sub(r"[^a-zA-Z\s]", "", name)
+    name = name.split()
+    name = "_".join(name)
+    
+    return name
 
 load_dotenv()
 googleJSON = os.getenv('GOOGLE_CLOUD_SERVICE_ACCOUNT')
@@ -46,14 +59,16 @@ for i, section in enumerate(games):
         players = team_section.find_all("li", class_="lineup__player")
         for player in players:
             position = player.find("div", class_="lineup__pos").get_text(strip=True)
-            player_link = player.find("a")
-            player_url = baseURL + player_link['href']
-            player_name = "_".join([j.capitalize() for j in player_url.split("/")[-1].split("-")[0:-1]])
+            pLink = player.find("a")
+            pUrl = baseURL + pLink['href']
+            pName = " ".join([j.capitalize() for j in pUrl.split("/")[-1].split("-")[0:-1]])
+            pName = regularize_name(pName)
             if position in positions:
-                positions[position] = player_name
+                positions[position] = pName
         return list(positions.values())
 
     visitingPlayers = extract_team_data(visitingTeam)
+    print(visitingPlayers)
     homePlayers = extract_team_data(homeTeam)
 
     lineups.append([visitName] + visitingPlayers)
@@ -64,6 +79,6 @@ df = pd.DataFrame(lineups, columns=['Team', 'PG', 'SG', 'SF', 'PF', 'C'])
 values = [df.columns.values.tolist()] + df.values.tolist()
 
 sh.batch_clear(["B2:F31"])
-sh.update("A1", values)
+sh.update(range_name="A1", values=values)
 
 print(df)

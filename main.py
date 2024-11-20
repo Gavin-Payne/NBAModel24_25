@@ -20,6 +20,19 @@ SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
 sh = sheet.worksheet("Calculations")
 
+# os.system('python getLineups.py')
+# os.system('oddsScrape.py')
+# os.system('python minutesScrape.py')
+os.system('python simulations.py')
+
+banned = [
+    "WAS",
+    "ORL",
+    "CHA",
+    "SAC",
+    "LAL"
+]
+
 df = pd.DataFrame(sh.get("B5:S154"))
 
 df.columns = ['Name', 'Opp', "H/A", "Minutes", '2PA', '2P%', '3PA', '3P%', 'FTA', 'FT%', "Mean", "Line",
@@ -29,17 +42,23 @@ df.replace('#N/A', np.nan, inplace=True)
 df.replace("#DIV/0!", np.nan, inplace=True)
 calcData = df.dropna()
 
-def adjust_odds(odds):
+def adjustOdds(odds):
     odds = odds.replace('−', '-').replace('+', '').strip()
     if int(odds) > 0:
         return int(odds) - 100
     else:
         return int(odds) + 100
+    
+def reverseAdjustOdds(odds):
+    if int(odds) > 0:
+        return int(odds) + 100
+    else:
+        return int(odds) - 100
 
-calcData['minOverOdds'] = calcData['minOverOdds'].apply(adjust_odds)
-calcData["minUnderOdds"] = calcData['minUnderOdds'].apply(adjust_odds)
-calcData['OverOdds'] = calcData['OverOdds'].apply(adjust_odds)
-calcData['UnderOdds'] = calcData['UnderOdds'].apply(adjust_odds)
+calcData['minOverOdds'] = calcData['minOverOdds'].apply(adjustOdds)
+calcData["minUnderOdds"] = calcData['minUnderOdds'].apply(adjustOdds)
+calcData['OverOdds'] = calcData['OverOdds'].apply(adjustOdds)
+calcData['UnderOdds'] = calcData['UnderOdds'].apply(adjustOdds)
 
 playable = []
 
@@ -62,13 +81,16 @@ sh.batch_clear(["T5:T"])
 sh.update(range_name="T5", values=insertData)
 
 plays = calcData[calcData['Bet'] != ""]
-outputData = plays[["Name", "Bet", "%Above", "%Below"]]
+plays["OddsO/U"] = np.where(plays['Bet'] == "Over", plays["OverOdds"], plays["UnderOdds"])
+plays["OddsO/U"] = plays["OddsO/U"].apply(reverseAdjustOdds)
+plays = plays[~plays["Opp"].isin(banned)]
+outputData = plays[["Name", "Bet", "Line", "OddsO/U", "%Above", "%Below"]]
 
 todaysPlays = [outputData.columns.values.tolist()] + outputData.values.tolist()
 
 sh = sheet.worksheet("Plays")
-sh.batch_clear(["B2:H151"])
-sh.update("B2", todaysPlays)
+sh.batch_clear(["B2:J151"])
+sh.update(range_name="B2", values=todaysPlays)
 
 print(calcData[["Name", "Bet", "%Above", "%Below"]])
 
