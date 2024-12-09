@@ -20,6 +20,7 @@ import numpy as np
 import re
 import unicodedata
 import time
+from datetime import datetime, timedelta
 
 
 load_dotenv()
@@ -57,17 +58,38 @@ base = dataBase.cursor()
 time.sleep(2)
 button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Add Player Filter"]')))
 driver.execute_script("arguments[0].click();", button)
+button2 = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Add Date Filter"]')))
+driver.execute_script("arguments[0].click();", button2)
 
+today = datetime.today()
+lowerBoundDate = today - timedelta(days=40)
+yesterday = lowerBoundDate.day
+yestermonth = ((today.year * 12 + today.month) - (lowerBoundDate.year * 12 + lowerBoundDate.month))
+
+def getDateRange(yestermonth, yesterday, today):
+    d1 = wait.until(EC.element_to_be_clickable((By.XPATH, '(//div[@class="vdp-datepicker"])')))
+    d1.click()
+    bb = wait.until(EC.element_to_be_clickable((By.XPATH, '(//span[@class="prev"])')))
+    for i in range(yestermonth):
+        bb.click()
+
+    db = wait.until(EC.element_to_be_clickable((By.XPATH, f'(//span[contains(@class, "cell day") and contains(., "{yesterday}")])')))
+    db.click()
+
+    d2 = wait.until(EC.element_to_be_clickable((By.XPATH, '(//div[@class="vdp-datepicker"])[2]')))
+    d2.click()
+    db2 = wait.until(EC.element_to_be_clickable((By.XPATH, f'(//span[contains(@class, "cell day today")])')))
+    db2.click()
+    
+getDateRange(yestermonth, yesterday, today)
+
+teams = wait.until(EC.presence_of_all_elements_located((By.XPATH, '(//div[@class="multiselect"])[3]//ul[@class="multiselect__content"]//li[@class="multiselect__element"]//span[@class="multiselect__option"]//span')))
+print(len(teams))
 
 
 for i in range(21, 30):
     if i > 0:
-        teams = wait.until(EC.element_to_be_clickable((By.XPATH, '(//div[@class="multiselect"])[3]')))
-        driver.execute_script("arguments[0].click();", teams)
-        time.sleep(2)
-
-        teams = wait.until(EC.presence_of_all_elements_located((By.XPATH, '(//div[@class="multiselect"])[3]//ul[@class="multiselect__content"]//li[@class="multiselect__element"]//span[@class="multiselect__option"]//span')))
-        team = teams[i]
+        team = teams[i - 1]
         driver.execute_script("arguments[0].scrollIntoView();", team)
         driver.execute_script("arguments[0].click();", team)
         time.sleep(2)
