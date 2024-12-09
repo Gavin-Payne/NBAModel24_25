@@ -87,7 +87,7 @@ teams = wait.until(EC.presence_of_all_elements_located((By.XPATH, '(//div[@class
 print(len(teams))
 
 
-for i in range(21, 30):
+for i in range(0, 30):
     if i > 0:
         team = teams[i - 1]
         driver.execute_script("arguments[0].scrollIntoView();", team)
