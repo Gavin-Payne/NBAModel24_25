@@ -4,10 +4,7 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
-import os
-import json
-import random
-import time
+import os, json, random, time, unicodedata, re
 
 load_dotenv()
 googleJSON = os.getenv('GOOGLE_CLOUD_SERVICE_ACCOUNT')
@@ -19,8 +16,23 @@ SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
 sh = sheet.worksheet("perGame")
 
-ids = sh.get("AF55:AF737")
-names = sh.get("C55:C737")
+def regularize_name(name):
+    name = unicodedata.normalize('NFD', name).encode('ascii', 'ignore').decode('utf-8')
+    name = re.sub(r"[’'`]", "", name)
+    name = re.sub(r"[-]", " ", name)
+    name = re.sub(r"[^a-zA-Z\s]", "", name)
+    name_parts = name.split()
+    suffixes = {"jr", "sr", "ii", "iii", "iv", "v"}
+    if name_parts and name_parts[-1].lower() in suffixes:
+        name_parts.pop()
+    name_parts = [part.capitalize() for part in name_parts]
+    name = "_".join(name_parts)
+    
+    return name
+
+ids = sh.get("AF2:AF503")
+names = sh.get("B2:B503")
+names = [regularize_name(name[0]) for name in names]
 worksheets = sheet.worksheets()
 worksheets = [ws.title for ws in worksheets]
 used = ["None"]
@@ -47,7 +59,7 @@ agents = [
 
 
 def scrape_game_log(playerId, attempt=1):
-    url = f"https://www.basketball-reference.com/players/s/{playerId}/gamelog/2024"
+    url = f"https://www.basketball-reference.com/players/s/{playerId}/gamelog/2025"
     incog = {'User-Agent': random.choice(agents)}
     response = requests.get(url, headers=incog)
     
@@ -95,7 +107,7 @@ def updateSheet(header, data, sheetName):
 
 for i in range(len(ids)):
     id = ids[i][0]
-    name = names[i][0]
+    name = names[i]
     if id not in used:
         if name in worksheets:
             used.append(id)
