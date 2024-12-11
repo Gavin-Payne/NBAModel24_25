@@ -6,6 +6,7 @@ import os
 import json
 import sqlite3
 import time
+from datetime import datetime
 import numpy as np
 
 load_dotenv()
@@ -16,8 +17,10 @@ creds = Credentials.from_service_account_info(googleAccount, scopes=scopes)
 client = gspread.authorize(creds)
 SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
-sheets = [i.title for i in sheet.worksheets()[12:]]
+sheets = [i.title for i in sheet.worksheets()[20:]]
 
+today = datetime.today()
+counter = 19
 
 dataBase = sqlite3.connect('nba_ids.db')
 base = dataBase.cursor()
@@ -30,13 +33,22 @@ dataBase.commit()
 hm = {}
 
 for sheetName in sheets:
+    counter += 1
     time.sleep(2)
     sh = sheet.worksheet(sheetName)
     
-    data = sh.get("I3:AE120")
+    date, data = sh.batch_get(["G3", "I3:AE120"])
     
     if not data:
         print(f"No data found for sheet: {sheetName}")
+        continue
+    
+    date = date[0][0]
+    date = datetime.strptime(date, "%Y-%m-%d")
+    minDate = datetime(2024, 7, 1)
+    thisSeason = date > minDate
+    if not thisSeason:
+        print(f"{sheetName} hasn't played this season")
         continue
     
     df = pd.DataFrame(data)
@@ -72,7 +84,7 @@ for sheetName in sheets:
         data = hm[f'away{HomeDf.iloc[i,1]}']
         for j in range(len(data)):
             data[j] += HomeDf.iloc[i, 3 + j]
-    print(sheetName)
+    print(sheetName, counter)
             
 teamData = []            
 for team, s in hm.items():
