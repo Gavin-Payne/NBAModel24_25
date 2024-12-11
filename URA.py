@@ -33,6 +33,8 @@ namesDf = namesDf.loc[namesDf["Name"] != ""]
 projPos = namesDf["Mean"].tolist()
 teams = []
 
+nameAdjustments = {"PJ_Washington": "Pj_Washington", "Alex_Sarr": "Alexandre_Sarr"}
+
 firstColumn, secondColumn, thirdColumn, usages = [], [], [], []
 for i in range(len(namesDf) // 5):
     temp = []
@@ -41,8 +43,7 @@ for i in range(len(namesDf) // 5):
     teams.append(temp)
 for ff, team in enumerate(teams):
     for fff, name in enumerate(team):
-        if name == "PJ_Washington": name = "Pj_Washington"
-        if name == "Alex_Sarr": name = "Alexandre_Sarr"
+        if name in nameAdjustments: name = nameAdjustments[name]
         query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{name}On';"
         base.execute(query)
         result1 = base.fetchone()
