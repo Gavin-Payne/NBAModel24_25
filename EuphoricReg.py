@@ -1,5 +1,6 @@
 from selenium import webdriver
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import StaleElementReferenceException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -21,6 +22,7 @@ import re
 import unicodedata
 import time
 from datetime import datetime, timedelta
+import gc
 
 
 load_dotenv()
@@ -47,7 +49,15 @@ def regularize_name(name):
     name = "_".join(name_parts)
     
     return name
-driver = webdriver.Chrome()
+
+options = Options()
+options.add_argument('--headless')
+options.add_argument('--disable-gpu')
+options.add_argument('--no-sandbox')
+options.add_argument('--disable-dev-shm-usage')
+options.add_argument('--blink-settings=imagesEnabled=false')
+
+driver = webdriver.Chrome(options=options)
 url = "https://www.pbpstats.com/possession-finder/nba"
 driver.get(url)
 wait = WebDriverWait(driver, 10)
@@ -86,7 +96,7 @@ getDateRange(yestermonth, yesterday, today)
 teams = wait.until(EC.presence_of_all_elements_located((By.XPATH, '(//div[@class="multiselect"])[3]//ul[@class="multiselect__content"]//li[@class="multiselect__element"]//span[@class="multiselect__option"]//span')))
 print(len(teams))
 
-for i in range(0, 30):
+for i in range(29, 30):
     if i > 0:
         team = teams[i - 1]
         driver.execute_script("arguments[0].scrollIntoView();", team)
@@ -148,8 +158,12 @@ for i in range(0, 30):
                         ''', tuple(row))
                     dataBase.commit()
                     print(name)
+                    driver.delete_all_cookies()
+                    gc.collect()
             except TimeoutException:
                 print(f"No data for {players[i].get_attribute('textContent')}")
+            except WebDriverException:
+                print(f"Error encountered: {players[i].get_attribute('textContent')}. Retrying...")
                 
         except StaleElementReferenceException:
             print(f"Stale element encountered for player at index {i}. Retrying...")
