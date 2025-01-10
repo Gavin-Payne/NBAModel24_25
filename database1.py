@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -41,7 +42,16 @@ dataBase.commit()
 
 repeats = [regularize_name(" ".join((ws.title).split("_"))) for ws in sheet.worksheets()]
 
-driver = webdriver.Chrome()
+
+
+options = Options()
+options.add_argument('--headless')
+options.add_argument('--disable-gpu')
+options.add_argument('--no-sandbox')
+options.add_argument('--disable-dev-shm-usage')
+options.add_argument('--blink-settings=imagesEnabled=false')
+
+driver = webdriver.Chrome(options=options)
 url = "https://www.pbpstats.com/on-off/nba/team?Season=2024-25&SeasonType=Regular%2BSeason&TeamId=1610612737&PlayerId=201988"
 driver.get(url)
 wait = WebDriverWait(driver, 10)
@@ -49,7 +59,7 @@ wait = WebDriverWait(driver, 10)
 teams = wait.until(EC.presence_of_all_elements_located((By.XPATH, '(//div[@class="multiselect"])[3]//ul[@class="multiselect__content"]//li[@class="multiselect__element"]//span[@class="multiselect__option"]//span')))
 print(len(teams))
 
-for i in range(0, 30):
+for i in range(26, 30):
     if i > 0:
         team = teams[i - 1]
         driver.execute_script("arguments[0].scrollIntoView();", team)
