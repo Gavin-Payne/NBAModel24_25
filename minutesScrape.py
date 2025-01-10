@@ -7,6 +7,7 @@ from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 import os
 import json
+import unicodedata
 
 load_dotenv()
 googleJSON = os.getenv('GOOGLE_CLOUD_SERVICE_ACCOUNT')
@@ -16,6 +17,23 @@ creds = Credentials.from_service_account_info(googleAccount, scopes=scopes)
 client = gspread.authorize(creds)
 SheetID = os.getenv("Sheet_ID")
 sheet = client.open_by_url(f'https://docs.google.com/spreadsheets/d/{SheetID}/edit#gid=478985565')
+
+exceptions = {"Taurean_Waller_Prince": "Taurean_Prince"}
+
+def regularize_name(name):
+    name = unicodedata.normalize('NFD', name).encode('ascii', 'ignore').decode('utf-8')
+    name = re.sub(r"[’'`]", "", name)
+    name = re.sub(r"[-]", " ", name)
+    name = re.sub(r"[^a-zA-Z\s]", "", name)
+    name_parts = name.split()
+    suffixes = {"jr", "sr", "ii", "iii", "iv", "v"}
+    if name_parts and name_parts[-1].lower() in suffixes:
+        name_parts.pop()
+    name_parts = [part.capitalize() for part in name_parts]
+    name = "_".join(name_parts)
+    if name in exceptions: name = exceptions[name]
+    return name
+
 sh = sheet.worksheet("minutesProjections")
 
 
@@ -37,15 +55,7 @@ df = pd.DataFrame(data, columns=headers)
 df.to_csv('output.csv', index=False)
 driver.quit()
 
-def normalizeNames(name):
-    name = '_'.join(re.findall(r"[\w']+", name))
-    name = name.split("_")
-    if name[-1] == "Jr":
-        name = name[:-1]
-    name = "_".join(name)
-    return name
-
-df["PLAYER"] = df['PLAYER'].apply(normalizeNames)
+df["PLAYER"] = df['PLAYER'].apply(regularize_name)
 df = [df.columns.values.tolist()] + df.values.tolist()
 sh.clear()
 sh.update("B2", df)
