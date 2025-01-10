@@ -15,10 +15,28 @@ def regularize_name(name):
     name = re.sub(r"[’'`]", "", name)
     name = re.sub(r"[-]", " ", name)
     name = re.sub(r"[^a-zA-Z\s]", "", name)
-    name = name.split()
-    name = "_".join(name)
+    name_parts = name.split()
+    suffixes = {"jr", "sr", "ii", "iii", "iv", "v"}
+    
+    # Remove suffix if present
+    if name_parts and name_parts[-1].lower() in suffixes:
+        name_parts.pop()
+    
+    # Capitalize each name part properly
+    name_parts = [part.capitalize() for part in name_parts]
+    name = "_".join(name_parts)
     
     return name
+
+def exceptions(team):
+    if team == "CHA":
+        return "CHO"
+    elif team == "PHX":
+        return "PHO"
+    elif team == "BKN":
+        return "BRK"
+    else:
+        return team
 
 load_dotenv()
 googleJSON = os.getenv('GOOGLE_CLOUD_SERVICE_ACCOUNT')
@@ -62,8 +80,9 @@ for i, section in enumerate(games):
             pLink = player.find("a")
             pUrl = baseURL + pLink['href']
             pName = " ".join([j.capitalize() for j in pUrl.split("/")[-1].split("-")[0:-1]])
+            print(pName)
             pName = regularize_name(pName)
-            if position in positions:
+            if position in positions and positions[position] == "":
                 positions[position] = pName
         return list(positions.values())
 
@@ -75,6 +94,7 @@ for i, section in enumerate(games):
     lineups.append([homeName] + homePlayers)
 
 df = pd.DataFrame(lineups, columns=['Team', 'PG', 'SG', 'SF', 'PF', 'C'])
+df["Team"] = df["Team"].apply(exceptions)
 
 values = [df.columns.values.tolist()] + df.values.tolist()
 
