@@ -12,9 +12,22 @@ import gspread
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 import re
+import unicodedata
 
+def regularize_name(name):
+    name = unicodedata.normalize('NFD', name).encode('ascii', 'ignore').decode('utf-8')
+    name = re.sub(r"[’'`]", "", name)
+    name = re.sub(r"[-]", " ", name)
+    name = re.sub(r"[^a-zA-Z\s]", "", name)
+    name_parts = name.split()
+    suffixes = {"jr", "sr", "ii", "iii", "iv", "v"}
+    if name_parts and name_parts[-1].lower() in suffixes:
+        name_parts.pop()
+    name_parts = [part.capitalize() for part in name_parts]
+    name = "_".join(name_parts)
+    
+    return name
 
-#Google Sheets initialize
 load_dotenv()
 googleJSON = os.getenv('GOOGLE_CLOUD_SERVICE_ACCOUNT')
 googleAccount = json.loads(googleJSON)
@@ -59,8 +72,8 @@ for i in range(len(urls)):
             name = name.split("_")
             if name[-1] == "Jr":
                 name = name[:-1]
-            name = "_".join(name)
-            
+            name = " ".join(name)
+            name = regularize_name(name)
             add = pd.Series({"Name": name, 'Over': overLine, 
                     'Over Odds': overOdds, 'Under': underLine, 'Under Odds': underOdds})
             
