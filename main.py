@@ -26,14 +26,11 @@ sh = sheet.worksheet("Calculations")
 os.system('python simulations.py')
 
 banned = [
-    "WAS",
-    "ORL",
-    "CHA",
-    "SAC",
-    "LAL"
+    
 ]
 
 df = pd.DataFrame(sh.get("B5:S154"))
+
 
 df.columns = ['Name', 'Opp', "H/A", "Minutes", '2PA', '2P%', '3PA', '3P%', 'FTA', 'FT%', "Mean", "Line",
               'OverOdds', 'UnderOdds', '%Above', '%Below', 'minOverOdds', 'minUnderOdds']
@@ -89,7 +86,7 @@ outputData = plays[["Name", "Bet", "Line", "OddsO/U", "%Above", "%Below"]]
 todaysPlays = [outputData.columns.values.tolist()] + outputData.values.tolist()
 
 sh = sheet.worksheet("Plays")
-sh.batch_clear(["B2:J151"])
+sh.batch_clear(["B2:H151"])
 sh.update(range_name="B2", values=todaysPlays)
 
 print(calcData[["Name", "Bet", "%Above", "%Below"]])
