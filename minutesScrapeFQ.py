@@ -44,7 +44,7 @@ sh = sheet.worksheet("minutesProjections")
 
 # Set up Selenium WebDriver
 driver = webdriver.Chrome()
-driver.get('https://www.nba.com/stats/players/traditional?LastNGames=1&Period=1&dir=A&sort=MIN')
+driver.get('https://www.nba.com/stats/players/traditional?LastNGames=3&Period=1&dir=A&sort=MIN')
 
 wait = WebDriverWait(driver, 10)
 dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//select[@class='DropDown_select__4pIg9']")))
@@ -79,7 +79,7 @@ sh.clear()
 sh.update(range_name="B2", values=df)
 
 driver = webdriver.Chrome()
-driver.get('https://www.nba.com/stats/players/traditional?LastNGames=1&Period=0&dir=A&sort=MIN')
+driver.get('https://www.nba.com/stats/players/traditional?LastNGames=3&Period=0&dir=A&sort=MIN')
 
 wait = WebDriverWait(driver, 10)
 dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "//select[@class='DropDown_select__4pIg9']")))

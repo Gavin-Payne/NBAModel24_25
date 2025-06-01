@@ -59,7 +59,7 @@ wait = WebDriverWait(driver, 10)
 teams = wait.until(EC.presence_of_all_elements_located((By.XPATH, '(//div[@class="multiselect"])[3]//ul[@class="multiselect__content"]//li[@class="multiselect__element"]//span[@class="multiselect__option"]//span')))
 print(len(teams))
 
-for i in range(26, 30):
+for i in range(1, 30):
     if i > 0:
         team = teams[i - 1]
         driver.execute_script("arguments[0].scrollIntoView();", team)

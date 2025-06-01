@@ -3,5 +3,11 @@ nba_ids.db
 nba_ids-My_Laptop-2.db
 nba_ids-My_Laptop.db
 output.csv
-NBAenv
-__pycache__
+NBAenv/
+playerVisuals/
+__pycache__/
+nba_ids-My_Laptop-2.db-journal
+nba_ids-My_Laptop.db-journal
+nba_ids-DESKTOP-KMF7S60-2.db
+nba_ids-DESKTOP-KMF7S60.db
+nba_ids-My_Laptop-3.db

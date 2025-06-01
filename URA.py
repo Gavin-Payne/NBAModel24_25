@@ -144,15 +144,15 @@ for i in range(len(firstColumn) // 5):
         if hm >= 0:
             tu += hm
             c += 1
-    fac = {5:1, 4:.80, 3:.65}
+    fac = {5:1.04, 4:.85, 3:.65}
     regFactor = tu / (fac[c] if fac.get(c) else 8)
-    print(regFactor)
     if regFactor > 0:
         for j in range(i * 5, i * 5 + 5):
             if usages[j] >= 0:
                 firstColumn[j] = firstColumn[j] / regFactor
                 secondColumn[j] = secondColumn[j] / regFactor
                 thirdColumn[j] = thirdColumn[j] / regFactor
+                usages[j] = usages[j] / regFactor
             else:
                 firstColumn[j] = "No data"
                 secondColumn[j] = "No data"
@@ -161,4 +161,5 @@ for i in range(len(firstColumn) // 5):
 sh.update(range_name="F5", values=[[x] for x in firstColumn]) 
 sh.update(range_name="H5", values=[[x] for x in secondColumn])  
 sh.update(range_name="J5", values=[[x] for x in thirdColumn])
+sh.update(range_name='A5', values=[[round(x, 4)] for x in usages])
 
